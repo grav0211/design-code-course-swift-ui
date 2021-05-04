@@ -10,6 +10,8 @@ import SwiftUI
 struct CoursesView: View {
     @State var show = false
     @Namespace var namespace
+    @State var selectedItem: Course? = nil
+    @State var isDisabled = false
     
     var body: some View {
         ZStack {
@@ -19,17 +21,34 @@ struct CoursesView: View {
                         CourseItem(course: item)
                             .matchedGeometryEffect(id: item.id, in: namespace, isSource: !show)
                             .frame(width: 335, height: 250)
+                            .onTapGesture {
+                                withAnimation(.spring()) {
+                                    show.toggle()
+                                    selectedItem = item
+                                    isDisabled = true
+                                }
+                            }
+                            .disabled(isDisabled)
                     }
                 }
                 .frame(maxWidth: .infinity)
             }
             
-            if show {
+            if let selectedItem = self.selectedItem {
                 ScrollView {
-                    CourseItem(course: courses[2])
-                        .matchedGeometryEffect(id: courses[0].id, in: namespace)
+                    CourseItem(course: selectedItem)
+                        .matchedGeometryEffect(id: selectedItem.id, in: namespace)
                         .frame(height: 300)
-                    VStack {
+                        .onTapGesture {
+                            withAnimation(.spring()) {
+                                show.toggle()
+                                self.selectedItem = nil
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    isDisabled = false
+                                }
+                            }
+                        }
+                    VStack(spacing: 8) {
                         ForEach(0 ..< 20) { item in
                             CourseRow()
                         }
@@ -48,12 +67,6 @@ struct CoursesView: View {
                     )
                 )
                 .edgesIgnoringSafeArea(.all)
-            }
-            
-        }
-        .onTapGesture {
-            withAnimation(.spring()) {
-                show.toggle()
             }
         }
     }
